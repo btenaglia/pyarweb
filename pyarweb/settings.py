@@ -18,19 +18,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'c2*wzebi9p3vola_tamd7zu4=4(2^9m$v0vdj(5_ybhhw6t629'
+SECRET_KEY = os.environ.get('SECRET_KEY', "somethingverysecret")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # Sites framework
 SITE_ID = 1
 
-TEMPLATE_DIRS = (os.path.join(BASE_DIR, 'templates'),)
-TEMPLATE_DEBUG = True
-
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Django registration
 # https://django-registration.readthedocs.org/en/latest/quickstart.html
@@ -48,12 +44,12 @@ DISQUS_WEBSITE_SHORTNAME = 'PyAr'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
-    'django.contrib.sites',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 
     # pyarweb apps
     'community',
@@ -69,9 +65,9 @@ INSTALLED_APPS = (
     'allauth.socialaccount',
     # ... include the providers you want to enable:
     # Ver esto mas adelante
-    #'allauth.socialaccount.providers.github',
-    #'allauth.socialaccount.providers.google',
-    #'allauth.socialaccount.providers.twitter',
+    # 'allauth.socialaccount.providers.github',
+    # 'allauth.socialaccount.providers.google',
+    # 'allauth.socialaccount.providers.twitter',
     'django_extensions',
     'disqus',
     'taggit',
@@ -91,16 +87,10 @@ INSTALLED_APPS = (
     'waliki.attachments',
     'waliki.slides',
     'waliki.togetherjs',
-    'kombu.transport.django',
-    'djcelery',
-    #'waliki.pdf'
     'captcha',
     'email_confirm_la',
 )
 
-
-import djcelery
-djcelery.setup_loader()
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -123,8 +113,12 @@ WSGI_APPLICATION = 'pyarweb.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('DB_NAME', "pyarweb"),
+        'USER': os.environ.get('DB_USER', "postgres"),
+        'PASSWORD': os.environ.get('DB_PASS', ""),
+        'HOST': os.environ.get('DB_SERVICE', "localhost"),
+        'PORT': os.environ.get('DB_PORT', 5432),
     }
 }
 
@@ -157,22 +151,32 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    # Required by allauth template tags
-    "django.core.context_processors.request",
-    # allauth specific context processors
-    "allauth.account.context_processors.account",
-    "allauth.socialaccount.context_processors.socialaccount",
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'DIRS': (os.path.join(BASE_DIR, 'templates'),),
+        'OPTIONS': {
+            'context_processors': [
+                #  allauth specific context processors
+                # "allauth.account.context_processors.account",
+                # "allauth.socialaccount.context_processors.socialaccount",
 
-    "django.contrib.auth.context_processors.auth",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.media",
-    'django.core.context_processors.static',
-    "django.core.context_processors.request",
-    "django.core.context_processors.i18n",
-    "django.contrib.messages.context_processors.messages",
-    "planet.context_processors.context"
-)
+                "django.contrib.auth.context_processors.auth",
+                "django.core.context_processors.debug",
+                "django.core.context_processors.media",
+                'django.core.context_processors.static',
+                "django.core.context_processors.request",
+                "django.core.context_processors.i18n",
+                "django.contrib.messages.context_processors.messages",
+                "planet.context_processors.context",
+
+                # `allauth` needs this from django
+                'django.template.context_processors.request',
+            ],
+        },
+    },
+]
 
 AUTHENTICATION_BACKENDS = (
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -228,7 +232,8 @@ RAVEN_CONFIG = None
 #
 EMAIL_CONFIRM_LA_CONFIRM_EXPIRE_SEC = 3600*24*7  # 7 días
 EMAIL_CONFIRM_LA_TEMPLATE_CONTEXT = {
-    'confirmation_url_validity_time': EMAIL_CONFIRM_LA_CONFIRM_EXPIRE_SEC / (3600*24),  # days
+    'confirmation_url_validity_time': EMAIL_CONFIRM_LA_CONFIRM_EXPIRE_SEC / (
+        3600*24),  # days
 }
 
 #
@@ -238,7 +243,7 @@ CAPTCHA_LENGTH = 6
 
 
 try:
-    from .local_settings import *
+    from .local_settings import *  # NOQA
 except:
     pass
 
@@ -255,6 +260,4 @@ if DEBUG:
 
 
 if RAVEN_CONFIG:
-    INSTALLED_APPS = INSTALLED_APPS + (
-        'raven.contrib.django.raven_compat',
-    )
+    INSTALLED_APPS += ('raven.contrib.django.raven_compat',)

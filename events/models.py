@@ -1,5 +1,5 @@
 from django.db.models.signals import post_save
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.dispatch import receiver
@@ -13,7 +13,7 @@ from jobs.models import JOB_SENIORITIES
 class Event(models.Model):
     """A PyAr events."""
 
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     name = models.CharField(max_length=100, verbose_name=_('Título'))
     description = models.TextField(verbose_name=_('Descripcion'))
     place = models.CharField(max_length=100, verbose_name=_('Lugar'))
@@ -38,7 +38,7 @@ class EventParticipation(models.Model):
     """A registration record to a PyAr event."""
 
     event = models.ForeignKey(Event, related_name='participants')
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True)
     name = models.CharField(max_length=100, verbose_name=_('nombre, nick, alias...'))
     email = models.EmailField(max_length=255, verbose_name=_('email'))
     interest = models.TextField(verbose_name=_('intereses'), blank=True)
@@ -83,6 +83,10 @@ class EventParticipation(models.Model):
 
     @property
     def is_verified(self):
+        """An EventParticipation in confirmed once the user's email is verified.
+        Registered users' email is verified by default.
+
+        """
         is_a_pyar_user = self.user is not None
         email_was_verified = not self.email_confirmations.exists()
         return is_a_pyar_user or email_was_verified
@@ -95,4 +99,3 @@ def post_anonymous_participation_creation(sender, instance, created, **kwargs):
     """
     if created and instance.user is None:
         instance.verify_email()
-

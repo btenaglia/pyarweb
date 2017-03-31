@@ -1,0 +1,10 @@
+#!/home/bruno/proyectos/pyar/pyarweb/pyarenv/bin/python3.4
+# EASY-INSTALL-ENTRY-SCRIPT: 'rst2html5==1.8.2','console_scripts','rst2html5'
+__requires__ = 'rst2html5==1.8.2'
+import sys
+from pkg_resources import load_entry_point
+
+if __name__ == '__main__':
+    sys.exit(
+        load_entry_point('rst2html5==1.8.2', 'console_scripts', 'rst2html5')()
+    )

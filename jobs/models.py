@@ -1,5 +1,5 @@
 from autoslug import AutoSlugField
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.translation import ugettext as _
@@ -33,7 +33,7 @@ class Job(models.Model):
     description = models.TextField(verbose_name=_('Descripción'))
     location = models.CharField(max_length=100, verbose_name=_('Lugar'))
     email = models.EmailField()
-    owner = models.ForeignKey(User)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     tags = TaggableManager(verbose_name=_('Etiquetas'))
@@ -68,7 +68,8 @@ class Job(models.Model):
 class JobInactivated(TimeStampedModel):
     """ Jobs Inactivated """
     REASONS = (
-        ('No es un trabajo relacionado con Python', 'No es un trabajo relacionado con Python'),
+        ('No es un trabajo relacionado con Python',
+         'No es un trabajo relacionado con Python'),
         ('Spam', 'Spam'),
         ('Información insuficiente', 'Información insuficiente'),
     )
@@ -88,5 +89,3 @@ class JobInactivated(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse('jobs_list_all')
-
-
